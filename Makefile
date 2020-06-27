@@ -8,5 +8,11 @@ lint:
 test:
 	pytest
 
-.PHONY: run lint test
+data:
+	./scripts/download.sh
+
+clean:
+	@rm -r data
+
+.PHONY: run lint test clean
 
