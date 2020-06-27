@@ -44,6 +44,11 @@ class VSCodeTheme:
 
         return cls(name=data['name'], spec=spec, parent=parent)
 
+    def pprint(self):
+        for scope in self.spec:
+            for path in scope.paths:
+                print(path, scope.settings)
+
 
 @dataclass(frozen=True)
 class Scope:
@@ -65,3 +70,4 @@ class FontStyle(enum.Enum):
 
 assert len(sys.argv) == 2
 theme = VSCodeTheme.load(sys.argv[1])
+theme.pprint()
