@@ -35,7 +35,7 @@ class VSCodeTheme:
 
         for tc in data.get('tokenColors', []):
             settings = Settings(
-                font_style=tc['settings'].get('fontStyle'),
+                font_style=FontStyle[tc['settings'].get('fontStyle', 'normal').upper()],
                 foreground=tc['settings'].get('foreground'),
             )
             paths = [tc['scope']] if isinstance(tc['scope'], str) else tc['scope']
@@ -45,9 +45,32 @@ class VSCodeTheme:
         return cls(name=data['name'], spec=spec, parent=parent)
 
     def pprint(self):
+        if self.parent:
+            self.parent.pprint()
+
         for scope in self.spec:
             for path in scope.paths:
-                print(path, scope.settings)
+                if scope.settings.foreground:
+                    hexcode = scope.settings.foreground.lstrip('#').upper()
+                    if len(hexcode) == 3:
+                        hexcode = f'{hexcode}{hexcode}'
+                    elif (
+                        len(hexcode) == 4
+                    ):  # TODO: properly handle that case (e.g. #0000)
+                        hexcode = f'{hexcode}{hexcode}'
+
+                    r, g, b = tuple(int(hexcode[i : i + 2], 16) for i in (0, 2, 4))
+                    formatted = f"\033[38;2;{r};{g};{b}m#{hexcode.lower()}\033[0m"
+                else:
+                    formatted = "#xxxxxx"
+
+                if scope.settings.font_style == FontStyle.BOLD:
+                    formatted = f"\033[1m{formatted}\033[0m"
+                elif scope.settings.font_style == FontStyle.ITALIC:
+                    formatted = f"\033[3m{formatted}\033[0m"
+                elif scope.settings.font_style == FontStyle.UNDERLINE:
+                    formatted = f"\033[4m{formatted}\033[0m"
+                print(path, formatted)
 
 
 @dataclass(frozen=True)
@@ -64,7 +87,9 @@ class Settings:
 
 
 class FontStyle(enum.Enum):
+    NORMAL = 'normal'
     BOLD = 'bold'
+    ITALIC = 'italic'
     UNDERLINE = 'underline'
 
 
